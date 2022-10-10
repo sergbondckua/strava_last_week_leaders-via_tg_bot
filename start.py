@@ -9,7 +9,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager  # Подключаем менеджер драйвера Хрома
+
+# Подключаем менеджер драйвера Хрома
+from webdriver_manager.chrome import ChromeDriverManager
 
 from fake_user_agent import user_agent
 
@@ -61,12 +63,11 @@ def get_source_html_page(url):
             # Получаем coockies с сайта и сохраняем их в файл
             pickle.dump(browser.get_cookies(), open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'wb'))
             logging.info('Авторизация, файл с cookies сохранен.')
-
-        # Достаем файл cookie и применям его для авторизации
-        for cookie in pickle.load(open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'rb')):
-            browser.add_cookie(cookie)
-
-        logging.info('Авторизация успешна!')
+        else:
+            # Достаем файл cookie и применям его для авторизации
+            for cookie in pickle.load(open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'rb')):
+                browser.add_cookie(cookie)
+            logging.info('Авторизация успешна!')
 
         # Нажимаем на кнопку показ таблицы лидеров прошлой недели
         browser.find_element(By.CLASS_NAME, 'last-week').click()
