@@ -1,8 +1,6 @@
 import os
-import sys
 import pickle
 import time
-from urllib.request import urlopen
 from pathlib import Path
 import logging
 
@@ -11,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager  # Подключаем менеджер драйвера Хрома
 
 from fake_user_agent import user_agent
 
@@ -25,13 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent
 def get_source_html_page(url):
     """ Открывает сайт url Strava, авторизируется, переходит на страницу лидеров прошлой недели и сохраняет ее в html"""
 
-    # Путь до chromedriver в зависимости какая ОС
-    if sys.platform == 'linux':
-        chromedriver = os.path.join(BASE_DIR, 'drivers/chromedriver')  # Linux
-    elif sys.platform == 'win32':
-        chromedriver = os.path.join(BASE_DIR, 'drivers/chromedriver.exe').replace('/', '\\')  # Windows
-    else:
-        chromedriver = os.path.join(BASE_DIR, 'drivers/chromedriver_mac')  # Mac OS
+    # Здесь менеджер драйвера Хрома проверит версии и установит нужную (актуальную).
+    chromedriver = ChromeDriverManager().install()
 
     useragent = user_agent('chrome')  # Фейковый юзер-агента брузера
     service = Service(chromedriver)  # Сервисы для webdriver
@@ -66,7 +60,7 @@ def get_source_html_page(url):
 
             # Получаем coockies с сайта и сохраняем их в файл
             pickle.dump(browser.get_cookies(), open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'wb'))
-            logging.info('Авторизация успешна, файл с cookies сохранен.')
+            logging.info('Авторизация, файл с cookies сохранен.')
 
         # Достаем файл cookie и применям его для авторизации
         for cookie in pickle.load(open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'rb')):
@@ -82,7 +76,7 @@ def get_source_html_page(url):
         # Сохраняем HTML страницы  в файл
         with open(os.path.join(BASE_DIR, 'source/source-page.html'), 'w', encoding='utf-8') as file:
             file.write(browser.page_source)
-        logging.info('Файл HTML всей страницы сохранен!')
+        logging.info(f"Файл HTML всей страницы сохранен! [{os.path.join(BASE_DIR, 'source/source-page.html')}]")
     except Exception as ex:
         logging.exception(ex)
     finally:
