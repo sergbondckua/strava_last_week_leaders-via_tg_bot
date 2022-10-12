@@ -14,6 +14,9 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 from fake_user_agent import user_agent
+from bs4 import BeautifulSoup
+
+import pictools
 
 # Включить ведение журнала логов
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -24,7 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 def get_source_html_page(url):
-    """ Открывает сайт url Strava, авторизируется, переходит на страницу лидеров прошлой недели и сохраняет ее в html"""
+    """ Открывает сайт url Strava, авторизируется,
+    переходит на страницу лидеров прошлой недели и сохраняет ее в HTML
+    """
 
     # Здесь менеджер драйвера Хрома проверит версии и установит нужную (актуальную).
     chromedriver = ChromeDriverManager().install()
@@ -67,6 +72,8 @@ def get_source_html_page(url):
             # Достаем файл cookie и применям его для авторизации
             for cookie in pickle.load(open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'rb')):
                 browser.add_cookie(cookie)
+            # Обязательно обновляем, чтобы cookies применились
+            browser.refresh()
             logging.info('Авторизация успешна!')
 
         # Нажимаем на кнопку показ таблицы лидеров прошлой недели
@@ -85,5 +92,50 @@ def get_source_html_page(url):
         browser.quit()
 
 
-if __name__ == "__main__":
+def get_leaders_data_list(file_path=os.path.join(BASE_DIR, 'source/source-page.html')):
+    """ Возвращает список словарей со всемы данными о спортсмене и его результаты """
+
+    with open(file_path, encoding='utf-8') as f:
+        src = f.read()
+
+    soup = BeautifulSoup(src, 'lxml')
+
+    # Забираем данные из таблицы рейтинга спортсменов
+    items_table = soup.find('table', class_='dense').find_all('tr')
+    week_leaders = []
+
+    for item in items_table[1:]:
+        rank = item.find('td', class_='rank').text.strip()
+        athlete_name = item.find('a', class_='athlete-name').text.strip()
+        athlete_url = 'https://www.strava.com' + item.find('a', class_='athlete-name').get('href').strip()
+        avatar_large = item.find('img').get('src').strip().replace('medium', 'large')
+        avatar_medium = item.find('img').get('src').strip()
+        distance = item.find('td', class_='distance').text.strip()
+        num_activities = item.find('td', class_='num-activities').text.strip()
+        longest_activity = item.find('td', class_='longest-activity').text.strip()
+        average_pace = item.find('td', class_='average-pace').text.strip()
+        elev_gain = item.find('td', class_='elev-gain').text.strip()
+
+        week_leaders.append(dict(
+            rank=rank,
+            name=athlete_name,
+            link=athlete_url,
+            avatar_large=avatar_large,
+            avatar_medium=avatar_medium,
+            distance=distance,
+            activities=num_activities,
+            longest=longest_activity,
+            avg_pace=average_pace,
+            elev_gain=elev_gain
+        ))
+    logging.info('Рейтинг спортсменов клуба прошедшей недели составлен!')
+    return week_leaders
+
+
+def main():
     get_source_html_page('https://www.strava.com/clubs/582642')
+    pictools.get_poster_leaders(get_leaders_data_list())
+
+
+if __name__ == "__main__":
+    main()

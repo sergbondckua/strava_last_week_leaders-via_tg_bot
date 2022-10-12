@@ -4,9 +4,11 @@ venv
 # IDE
 .idea
 .vscode
+__pycache__/
 
 # AUTH
 source/auth_cookie
 
 # DATA
 source/source-page.html
+images/out
