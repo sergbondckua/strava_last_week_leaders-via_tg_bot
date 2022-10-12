@@ -16,7 +16,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 from fake_user_agent import user_agent
 from bs4 import BeautifulSoup
 
+# Custom
 import pictools
+import tg_sender
 
 # Включить ведение журнала логов
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -24,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 # Пути внутри проекта следующим образом: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent
+
+# URL Strava Club для извлечения табл. лидеров прошедшей недели
+URL = 'https://www.strava.com/clubs/582642'
 
 
 def get_source_html_page(url):
@@ -39,7 +44,7 @@ def get_source_html_page(url):
     options = Options()  # Опции для webdriver
     options.add_argument(f'user-agent={useragent}')  # Передаем аргумент юзерагент браузера
     options.add_argument('--disable-blink-features=AutomationControlled')  # Откл возможность определять сайтами webdriv
-    options.headless = False  # Открывать браузер в фотоновом режиме
+    options.headless = True  # Открывать браузер в фотоновом режиме
     options.add_argument('--no-sandbox')  # Отключает изолированную среду
     browser = Chrome(service=service, options=options)  # Создаем объект драйвера
 
@@ -133,8 +138,9 @@ def get_leaders_data_list(file_path=os.path.join(BASE_DIR, 'source/source-page.h
 
 
 def main():
-    get_source_html_page('https://www.strava.com/clubs/582642')
+    get_source_html_page(URL)
     pictools.get_poster_leaders(get_leaders_data_list())
+    tg_sender.send_to_telegram()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import os
-from urllib.request import urlopen, urlretrieve
+from urllib.request import urlopen
 from PIL import (
     Image,
     ImageChops,
