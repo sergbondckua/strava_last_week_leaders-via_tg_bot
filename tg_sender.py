@@ -12,7 +12,7 @@ if sys.platform == 'linux':
 elif sys.platform == 'win32':
     locale.setlocale(locale.LC_ALL, "ukr")  # Windows
 else:
-    locale.setlocale(locale.LC_ALL, "uk")  # Mac OS
+    locale.setlocale(locale.LC_ALL, "uk_UA.UTF-8")  # Mac OS
 
 token_bot = os.environ['TOKEN_BOT']  # Токен ТГ бота
 bot = telegram.Bot(token=token_bot)  # для работы api бота
