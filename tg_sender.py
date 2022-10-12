@@ -11,8 +11,8 @@ if sys.platform == 'linux':
     locale.setlocale(locale.LC_ALL, "uk_UA.utf8")  # Ubuntu
 elif sys.platform == 'win32':
     locale.setlocale(locale.LC_ALL, "ukr")  # Windows
-else:
-    locale.setlocale(locale.LC_ALL, "uk_UA.UTF-8")  # Mac OS
+elif sys.platform == 'darwin':
+    locale.setlocale(locale.LC_ALL, "uk_UA.UTF-8")  # MacOS
 
 token_bot = os.environ['TOKEN_BOT']  # Токен ТГ бота
 bot = telegram.Bot(token=token_bot)  # для работы api бота
@@ -25,12 +25,11 @@ def send_to_telegram():
     """ Отправляет постеры с рейтнингом в телеграм"""
     # Активность: Пишет текст
     bot.sendChatAction(chat_id=chat_id, action=telegram.ChatAction.TYPING)
-
-    description = datetime.strftime(datetime.now() - timedelta(weeks=1), 'Підсумок %W-го бігового тижня, %Y року (%B)')
-    tag_month = datetime.strftime(datetime.now() - timedelta(weeks=1), '%B')
+    description = (datetime.now() - timedelta(weeks=1)).strftime('Підсумок %W-го бігового тижня, %Y року (%B)')
+    tag_month = (datetime.now() - timedelta(weeks=1)).strftime('%B')
     media_group = [
         telegram.InputMediaPhoto(
-            open(os.path.join(os.path.dirname(__file__), f'images/out/out{num}.png'), 'rb'), parse_mode='html',
+            open(os.path.join(start.BASE_DIR, f'images/out/out{num}.png'), 'rb'), parse_mode='html',
             caption=f"📊 <b>{description}</b>\n\n"
                     f"#{tag_month} | #leaders_last_week | <a href='{start.URL}'>StravaClub</a>"
             if num == 1 else ''
