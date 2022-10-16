@@ -51,8 +51,8 @@ def get_source_html_page(url):
     try:
         browser.get(url)
         if not os.path.isfile(os.path.join(BASE_DIR, 'source/auth_cookie')):
+            browser.get('https://www.strava.com/login')
             browser.find_element(By.CLASS_NAME, 'btn-accept-cookie-banner').click()
-            browser.find_element(By.CLASS_NAME, 'btn-login').click()
 
             # Авторизация
             logging.info('Открыта страница авторизации.')
@@ -73,7 +73,9 @@ def get_source_html_page(url):
             # Получаем coockies с сайта и сохраняем их в файл
             pickle.dump(browser.get_cookies(), open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'wb'))
             logging.info('Авторизация, файл с cookies сохранен.')
+            browser.get(url)
         else:
+            browser.get(url)
             # Достаем файл cookie и применям его для авторизации
             for cookie in pickle.load(open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'rb')):
                 browser.add_cookie(cookie)
@@ -134,6 +136,9 @@ def get_leaders_data_list(file_path=os.path.join(BASE_DIR, 'source/source-page.h
             elev_gain=elev_gain
         ))
     logging.info('Рейтинг спортсменов клуба прошедшей недели составлен!')
+    # Удаляем файл, как неактуальный
+    if os.path.isfile(os.path.join(BASE_DIR, 'source/source-page.html')):
+        os.remove(os.path.join(BASE_DIR, 'source/source-page.html'))
     return week_leaders
 
 
