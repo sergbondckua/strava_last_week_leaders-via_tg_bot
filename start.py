@@ -49,7 +49,6 @@ def get_source_html_page(url):
     browser = Chrome(service=service, options=options)  # Создаем объект драйвера
 
     try:
-        browser.get(url)
         if not os.path.isfile(os.path.join(BASE_DIR, 'source/auth_cookie')):
             browser.get('https://www.strava.com/login')
             browser.find_element(By.CLASS_NAME, 'btn-accept-cookie-banner').click()
