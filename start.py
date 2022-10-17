@@ -7,6 +7,9 @@ import pytz
 
 # Selenium modules
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -23,7 +26,8 @@ import pictools
 import tg_sender
 
 # Включить ведение журнала логов
-logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Пути внутри проекта следующим образом: BASE_DIR / 'subdir'.
@@ -45,7 +49,8 @@ def get_source_html_page(url):
     service = Service(chromedriver)  # Сервисы для webdriver
     options = Options()  # Опции для webdriver
     options.add_argument(f'user-agent={useragent}')  # Передаем аргумент юзерагент браузера
-    options.add_argument('--disable-blink-features=AutomationControlled')  # Откл возможность определять сайтами webdriv
+    options.add_argument(
+        '--disable-blink-features=AutomationControlled')  # Откл возможность определять сайтами webdriv
     options.headless = True  # Открывать браузер в фотоновом режиме
     options.add_argument('--no-sandbox')  # Отключает изолированную среду
     browser = Chrome(service=service, options=options)  # Создаем объект драйвера
@@ -72,7 +77,8 @@ def get_source_html_page(url):
             browser.find_element(By.ID, 'login-button').click()
 
             # Получаем coockies с сайта и сохраняем их в файл
-            pickle.dump(browser.get_cookies(), open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'wb'))
+            pickle.dump(browser.get_cookies(),
+                        open(os.path.join(BASE_DIR, 'source/auth_cookie'), 'wb'))
             logging.info('Авторизация, файл с cookies сохранен.')
             browser.get(url)
         else:
@@ -89,10 +95,44 @@ def get_source_html_page(url):
         logging.info('Переход к таблице лидеров прошлой недели')
         time.sleep(1)
 
-        # Сохраняем HTML страницы  в файл
-        with open(os.path.join(BASE_DIR, 'source/source-page.html'), 'w', encoding='utf-8') as file:
-            file.write(browser.page_source)
-        logging.info(f"Файл HTML всей страницы сохранен! [{os.path.join(BASE_DIR, 'source/source-page.html')}]")
+        # Забираем данные из таблицы лидеров
+        try:
+            WebDriverWait(browser, 10).until(
+                ec.presence_of_element_located((By.CLASS_NAME, 'dense')))
+        except TimeoutException as e:
+            logging.exception(e)
+
+        last_week_leaders = []
+        lst = []
+
+        table = browser.find_element(By.CLASS_NAME, 'dense')
+        tr_contents = table.find_elements(By.TAG_NAME, 'tr')
+
+        for num, tr in enumerate(tr_contents[1:]):
+            athlete_url = tr.find_element(By.TAG_NAME, 'a').get_attribute('href').strip()
+            avatar_medium = tr.find_element(By.TAG_NAME, 'img').get_attribute('src').strip()
+            avatar_large = tr.find_element(By.TAG_NAME, 'img').get_attribute(
+                'src').strip().replace('medium', 'large')
+
+            # Проходим, чтобы найти td под каждым tr
+            for td in tr.find_elements(By.TAG_NAME, 'td'):
+                # Сохраняем содержимое каждого td в lst
+                lst.append(td.text)
+
+            # Формируем список словарей с данными спортсмена из табл.
+            last_week_leaders.append(dict(zip(
+                ['rank', 'athlete_name', 'distance', 'activities',
+                 'longest', 'avg_pace', 'elev_gain'], lst)))
+
+            last_week_leaders[num]['avatar_large'] = avatar_large
+            last_week_leaders[num]['avatar_medium'] = avatar_medium
+            last_week_leaders[num]['link'] = athlete_url
+            lst = []
+
+        logging.info(
+            f"Сформирован список словарей с данными спортсмена из таблицы")
+
+        return last_week_leaders
     except Exception as ex:
         logging.exception(ex)
     finally:
@@ -100,52 +140,8 @@ def get_source_html_page(url):
         browser.quit()
 
 
-def get_leaders_data_list(file_path=os.path.join(BASE_DIR, 'source/source-page.html')):
-    """ Возвращает список словарей со всемы данными о спортсмене и его результаты """
-
-    with open(file_path, encoding='utf-8') as f:
-        src = f.read()
-
-    soup = BeautifulSoup(src, 'lxml')
-
-    # Забираем данные из таблицы рейтинга спортсменов
-    items_table = soup.find('table', class_='dense').find_all('tr')
-    week_leaders = []
-
-    for item in items_table[1:]:
-        rank = item.find('td', class_='rank').text.strip()
-        athlete_name = item.find('a', class_='athlete-name').text.strip()
-        athlete_url = 'https://www.strava.com' + item.find('a', class_='athlete-name').get('href').strip()
-        avatar_large = item.find('img').get('src').strip().replace('medium', 'large')
-        avatar_medium = item.find('img').get('src').strip()
-        distance = item.find('td', class_='distance').text.strip()
-        num_activities = item.find('td', class_='num-activities').text.strip()
-        longest_activity = item.find('td', class_='longest-activity').text.strip()
-        average_pace = item.find('td', class_='average-pace').text.strip()
-        elev_gain = item.find('td', class_='elev-gain').text.strip()
-
-        week_leaders.append(dict(
-            rank=rank,
-            name=athlete_name,
-            link=athlete_url,
-            avatar_large=avatar_large,
-            avatar_medium=avatar_medium,
-            distance=distance,
-            activities=num_activities,
-            longest=longest_activity,
-            avg_pace=average_pace,
-            elev_gain=elev_gain
-        ))
-    logging.info('Рейтинг спортсменов клуба прошедшей недели составлен!')
-    # Удаляем файл, как неактуальный
-    if os.path.isfile(os.path.join(BASE_DIR, 'source/source-page.html')):
-        os.remove(os.path.join(BASE_DIR, 'source/source-page.html'))
-    return week_leaders
-
-
 def main():
-    get_source_html_page(URL)
-    pictools.get_poster_leaders(get_leaders_data_list())
+    pictools.get_poster_leaders(get_source_html_page(URL))
     tg_sender.send_to_telegram()
 
 
@@ -156,4 +152,5 @@ if __name__ == "__main__":
     # Каждый понедельник в 12:00
     sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
 
+    # Запуск daemon
     sched.start()

@@ -66,8 +66,9 @@ def get_poster_leaders(list_data_leaders):
     # Данные от get_leaders_data_list и размещаем их на изображении
     for place, sportsmen in enumerate(list_data_leaders[:26]):
 
-        # Если символы в имени (строке) спортсмена не поддерживаются шрифтом заменяем на шрифт, который это умеет
-        if char_in_font(sportsmen.get('name')[:1], TTFont(ubuntu_font)):
+        # Если символы в имени (строке) спортсмена не поддерживаются шрифтом заменяем на шрифт,
+        # который это умеет
+        if char_in_font(sportsmen.get('athlete_name')[:1], TTFont(ubuntu_font)):
             font = ImageFont.truetype(symbol_font, size=26)
         else:
             font = ImageFont.truetype(ubuntu_font, size=30)
@@ -100,7 +101,7 @@ def get_poster_leaders(list_data_leaders):
                             )
 
             emoji_text.text((140, shift + 20),
-                            f"{sportsmen.get('name')} 🔸 {sportsmen.get('distance')}",
+                            f"{sportsmen.get('athlete_name')} 🔸 {sportsmen.get('distance')}",
                             font=font,
                             fill='#1b0f13'
                             )
@@ -115,7 +116,7 @@ def get_poster_leaders(list_data_leaders):
                              )
 
             emoji_text2.text((140, shift_2 + 20),
-                             f"{sportsmen.get('name')} 🔸 {sportsmen.get('distance')}",
+                             f"{sportsmen.get('athlete_name')} 🔸 {sportsmen.get('distance')}",
                              font=font,
                              fill='#1b0f13'
                              )
