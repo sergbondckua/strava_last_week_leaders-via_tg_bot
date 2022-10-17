@@ -18,11 +18,11 @@ token_bot = os.environ['TOKEN_BOT']  # Токен ТГ бота
 bot = telegram.Bot(token=token_bot)  # для работы api бота
 chat_id = os.environ['CHAT_ID']  # Чат, канал в Telegram
 
-start.logging.info('Отправка в Телеграм канал...')
-
 
 def send_to_telegram():
     """ Отправляет постеры с рейтнингом в телеграм"""
+
+    start.logging.info('Отправка в Телеграм канал...')
     # Активность: Пишет текст
     bot.sendChatAction(chat_id=chat_id, action=telegram.ChatAction.TYPING)
     description = (datetime.now() - timedelta(weeks=1)).strftime('Підсумок %W-го бігового тижня, %Y року (%B)')

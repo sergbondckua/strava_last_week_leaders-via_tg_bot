@@ -3,6 +3,7 @@ import pickle
 import time
 from pathlib import Path
 import logging
+import pytz
 
 # Selenium modules
 from selenium.webdriver.common.by import By
@@ -150,7 +151,7 @@ def main():
 
 if __name__ == "__main__":
     # Планировщик запуска
-    sched = BlockingScheduler()
+    sched = BlockingScheduler(timezone=pytz.timezone("Europe/Kiev"))
 
     # Каждый понедельник в 12:00
     sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
