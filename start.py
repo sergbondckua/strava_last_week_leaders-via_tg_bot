@@ -153,6 +153,6 @@ if __name__ == "__main__":
     sched = BlockingScheduler()
 
     # Каждый понедельник в 12:00
-    sched.add_job(main, 'cron', day_of_week='mon', hour='2', minute="45")
+    sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
 
     sched.start()
