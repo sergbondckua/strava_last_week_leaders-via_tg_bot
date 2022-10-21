@@ -18,7 +18,6 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 from fake_user_agent import user_agent
-from bs4 import BeautifulSoup
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 # Custom
@@ -146,11 +145,12 @@ def main():
 
 
 if __name__ == "__main__":
-    # Планировщик запуска
-    sched = BlockingScheduler(timezone=pytz.timezone("Europe/Kiev"))
-
-    # Каждый понедельник в 12:00
-    sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
-
-    # Запуск daemon
-    sched.start()
+    # # Планировщик запуска
+    # sched = BlockingScheduler(timezone=pytz.timezone("Europe/Kiev"))
+    #
+    # # Каждый понедельник в 12:00
+    # sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
+    #
+    # # Запуск daemon
+    # sched.start()
+    main()
