@@ -65,12 +65,12 @@ def get_source_html_page(url):
             # Вводим email
             email_input = browser.find_element(By.ID, 'email')
             email_input.clear()
-            email_input.send_keys(os.environ['EMAIL'])
+            email_input.send_keys(os.getenv('EMAIL'))
 
             # Вводим password
             paswd_input = browser.find_element(By.ID, 'password')
             paswd_input.clear()
-            paswd_input.send_keys(os.environ['PASSWD'])
+            paswd_input.send_keys(os.getenv('PASSWD'))
 
             # Нажимаем на кнопку авторизации
             browser.find_element(By.ID, 'login-button').click()
@@ -145,12 +145,11 @@ def main():
 
 
 if __name__ == "__main__":
-    # # Планировщик запуска
-    # sched = BlockingScheduler(timezone=pytz.timezone("Europe/Kiev"))
-    #
-    # # Каждый понедельник в 12:00
-    # sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
-    #
-    # # Запуск daemon
-    # sched.start()
-    main()
+    # Планировщик запуска
+    sched = BlockingScheduler(timezone=pytz.timezone("Europe/Kiev"))
+
+    # Каждый понедельник в 12:00
+    sched.add_job(main, 'cron', day_of_week='mon', hour='12', minute="00")
+
+    # Запуск daemon
+    sched.start()

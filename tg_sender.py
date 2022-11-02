@@ -14,9 +14,9 @@ elif sys.platform == 'win32':
 elif sys.platform == 'darwin':
     locale.setlocale(locale.LC_ALL, "uk_UA.UTF-8")  # MacOS
 
-token_bot = os.environ['TOKEN_BOT']  # Токен ТГ бота
+token_bot = os.getenv("TOKEN_BOT")  # Токен ТГ бота
 bot = telegram.Bot(token=token_bot)  # для работы api бота
-chat_id = os.environ['CHAT_ID']  # Чат, канал в Telegram
+chat_id = os.getenv('CHAT_ID')  # Чат, канал в Telegram
 
 
 def send_to_telegram():
